@@ -33,6 +33,15 @@ app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });
 
+//TODO: Test GET Product List
+// db.query(`SELECT * FROM product_list ORDER BY product_list ASC LIMIT 5 `)
+//   .then((res) => {
+//     console.log(res.rows);
+//   })
+//   .catch((err) => {
+//     console.log(err.stack);
+//   });
+
 //TODO: Test GET product
 // let testProd = 1;
 // let obj;
@@ -43,7 +52,7 @@ app.listen(port, () => {
 //     db.query(`SELECT * FROM features WHERE product_id = ${testProd}`)
 //       .then(({ rows }) => {
 //         rows.map((feature) => {
-//           let obj2 = { feature: feature.feature, value: feature.value };
+//           let obj2 = { "feature": feature.feature, "value": feature.value };
 //           return obj.features.push(obj2);
 //         });
 //       })
@@ -59,35 +68,51 @@ app.listen(port, () => {
 //   });
 
 //TODO: Test GET styles
-let productId = 1;
-let product = { product_id: productId, results: [] };
-db.query(
-  `SELECT "style_id", "name", "original_price", "sale_price", "default?" FROM styles WHERE product_id = ${productId}`
-)
-  .then((res) => {
-    res.rows.forEach((item) => {
-      product.results.push(item);
-    });
-    // console.log(res)
-  })
-  .then(() => {
-    console.log(product);
-  })
-  .catch((err) => {
-    console.log(err);
-  });
+// let productId = 1;
+// let product = { product_id: productId, results: [] };
+// db.query(
+//   `SELECT "style_id", "name", "original_price", "sale_price", "default?" FROM styles WHERE product_id = ${productId}`
+// )
+//   .then((res) => {
+//     res.rows.forEach((item) => {
+//       item.photos = [];
+//       db.query(`SELECT * FROM photos WHERE style_id = ${item.style_id}`)
+//         .then((res) => {
+//           res.rows.forEach((photo) => {
+//             item.photos.push({
+//               thumbnail_url: photo.thumbnail_url,
+//               url: photo.url,
+//             });
+//             console.log(item.photos);
+//           });
+//         })
+//         .then(() => {
+//           product.results.push(item);
+//         })
+//         .then(() => {
+//           console.log(product);
+//         })
+//         .catch((err) => {
+//           console.log(err);
+//         });
+//     });
+//   })
+//   .catch((err) => {
+//     console.log(err.stack);
+//   });
 
 //ROUTES
 app.get("/products/list", (req, res) => {
   const page = req.params.page;
-  const count = req.params.count;
-  db.query("SELECT * FROM product_list LIMIT 5")
+  const count = req.params.count || 5;
+
+  db.query(`SELECT * FROM product_list LIMIT ${count}`)
     .then((rows) => {
       res.send(rows);
     })
     .catch((err) => {
-      console.log(err);
-      res.sendStatus(404);
+      console.log(err.stack);
+      res.sendStatus(500);
     });
 });
 
@@ -106,14 +131,16 @@ app.get("/products/:product_id", (req, res) => {
           });
         })
         .then(() => {
-          console.log(obj);
+          res.send(obj);
         })
         .catch((err) => {
-          console.log(err);
+          console.log(err.stack);
+          res.send(500);
         });
     })
     .catch((err) => {
-      console.log(err);
+      console.log(err.stack);
+      res.send(500);
     });
 });
 
@@ -122,18 +149,31 @@ app.get("/products/:product_id/styles", (req, res) => {
   let product = { product_id: productId, results: [] };
 
   db.query(
-    `SELECT "style_id", "name", "sale_price", "original_price", "default?" FROM styles WHERE product_id = ${productId}`
+    `SELECT "style_id", "name", "original_price", "sale_price", "default?" FROM styles WHERE product_id = ${productId}`
   )
     .then((res) => {
       res.rows.forEach((item) => {
-        product.results.push(item);
+        item.photos = [];
+        db.query(`SELECT * FROM photos WHERE style_id = ${item.style_id}`)
+          .then((res) => {
+            res.rows.forEach((photo) => {
+              item.photos.push(photo);
+            });
+          })
+          .then(() => {
+            product.results.push(item);
+          })
+          .then(() => {
+            res.send(product);
+          })
+          .catch((err) => {
+            console.log(err);
+            res.send(500);
+          });
       });
-      // console.log(res)
-    })
-    .then(() => {
-      console.log(product);
     })
     .catch((err) => {
-      console.log(err);
+      console.log(err.stack);
+      res.send(500);
     });
 });
