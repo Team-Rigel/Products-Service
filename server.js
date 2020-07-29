@@ -3,12 +3,15 @@ const path = require("path");
 const axios = require("axios");
 const bodyparser = require("body-parser");
 const morgan = require("morgan");
+const cors = require("cors");
 const port = 3000;
 const app = express();
 app.use(morgan("dev"));
 app.use(bodyparser.json());
 
 const db = require("./db/");
+
+app.use(cors())
 
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
@@ -81,7 +84,7 @@ app.get("/products/list", (req, res) => {
 
   db.query(`SELECT * FROM product_list LIMIT ${count}`)
     .then(({ rows }) => {
-      console.log(rows);
+      // console.log(rows);
       res.send(rows);
     })
     .catch((err) => {
@@ -91,6 +94,7 @@ app.get("/products/list", (req, res) => {
 });
 
 app.get("/products/:product_id", (req, res) => {
+  console.log(req.headers);
   let product = req.params.product_id;
 
   db.query(`SELECT * FROM product_list WHERE id = ${product}`)
@@ -101,7 +105,7 @@ app.get("/products/:product_id", (req, res) => {
         .then(({ rows }) => {
           rows.map((feature) => {
             let obj2 = { feature: feature.feature, value: feature.value };
-            console.log(obj2);
+            // console.log(obj2);
             return obj.features.push(obj2);
           });
         })
@@ -120,7 +124,7 @@ app.get("/products/:product_id", (req, res) => {
 });
 
 app.get("/products/:product_id/styles", (req, res) => {
-  console.log(req.params);
+  // console.log(req.params);
   let productId = req.params.product_id;
   let product = { product_id: productId, results: [] };
 
@@ -172,7 +176,7 @@ app.get("/products/:product_id/styles", (req, res) => {
         })
       ).then(() => {
         setTimeout(() => {
-          console.log(product);
+          // console.log(product);
           res.send(product);
         }, 1000);
       });
